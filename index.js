@@ -1,7 +1,7 @@
 const express = require("express");
 const morgan = require("morgan");
 const auth = require("./auth/auth");
-const parcel = require("./parcel/parcel")
+const parcel = require("./parcel/parcel");
 
 const app = express();
 
@@ -20,7 +20,7 @@ app.use('/api/v1/auth', auth);
 //Route for parcel delivery app
 app.use('/api/v1/parcel', parcel)
 
-PORT = 5000;
+PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
     console.log(`Server is running on PORT ${ PORT }`)
