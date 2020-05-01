@@ -5,11 +5,20 @@ const bcrypt = require("bcryptjs");
 var jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
 
-dotenv.config({ path: "../config/config.env" });
+dotenv.config({
+  path: "../config/config.env"
+});
 
 //Create a user
 router.post("/signup", async (req, res) => {
-  const { role_id, email, password, first_name, last_name, state } = req.body;
+  const {
+    role_id,
+    email,
+    password,
+    first_name,
+    last_name,
+    state
+  } = req.body;
 
   let errors = [];
 
@@ -51,8 +60,7 @@ router.post("/signup", async (req, res) => {
   };
 
   const queryObjTwo = {
-    text:
-      "INSERT INTO Users (role_id, email, password, first_name, last_name, state) VALUES($1, $2, $3, $4, $5, $6) RETURNING *",
+    text: "INSERT INTO Users (role_id, email, password, first_name, last_name, state) VALUES($1, $2, $3, $4, $5, $6) RETURNING *",
     values: [role_id, email, hashedPassword, first_name, last_name, state],
   };
 
@@ -97,14 +105,16 @@ router.post("/signup", async (req, res) => {
 
 //User login
 router.post("/login", (req, res) => {
-  const { email } = req.body;
+  const {
+    email
+  } = req.body;
   pool.query(
     "SELECT * FROM Users WHERE email = $1",
     [email],
     (err, results) => {
       if (results.rowCount == 0) {
         res.json({
-          message: "Email is not found",
+          message: "Wrong email or password",
         });
       }
       if (err) {
@@ -112,7 +122,9 @@ router.post("/login", (req, res) => {
       }
       if (results.rowCount == 1) {
         const user = results.rows[0];
-        const { password } = req.body;
+        const {
+          password
+        } = req.body;
         pool.query(
           "SELECT * FROM Users WHERE password = $1",
           [password],
@@ -122,8 +134,7 @@ router.post("/login", (req, res) => {
                 throw err;
               }
               if (isMatch) {
-                const token = jwt.sign(
-                  {
+                const token = jwt.sign({
                     _id: user.id,
                   },
                   "secret"
