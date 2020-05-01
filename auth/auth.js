@@ -114,7 +114,7 @@ router.post("/login", (req, res) => {
     (err, results) => {
       if (results.rowCount == 0) {
         res.json({
-          message: "Email is not found",
+          message: "Wrong email or password",
         });
       }
       if (err) {
