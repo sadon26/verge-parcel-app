@@ -6,12 +6,13 @@ var jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
 
 dotenv.config({
-  path: "../config/config.env"
+  path: "../config/config.env",
 });
 
 //Create a user
 router.post("/signup", async (req, res) => {
   const {
+    role_name,
     role_id,
     email,
     password,
@@ -19,8 +20,6 @@ router.post("/signup", async (req, res) => {
     last_name,
     state
   } = req.body;
-
-  let errors = [];
 
   var salt = bcrypt.genSaltSync(10);
   let hashedPassword = await bcrypt.hash(password, salt);
@@ -31,37 +30,15 @@ router.post("/signup", async (req, res) => {
     });
   }
 
-  const roleQueryObj = {
-    text: "SELECT * FROM Roles WHERE id = $1",
-    values: [role_id],
-  };
-
-  // check for role
-  pool.query(roleQueryObj, (err, results) => {
-    if (err) {
-      throw err;
-    }
-    if (results.rowCount == 0) {
-      res.status(400).json({
-        message: "Role not found",
-      });
-    }
-  });
-
   if (password.length < 6) {
-    errors.push({
-      message: "Password should be at least 6 characters",
-    });
+    res.status(400).json({
+      message: "Password should be at least 6 characters"
+    })
   }
 
   const queryObj = {
     text: "SELECT * FROM Users WHERE email = $1",
     values: [email],
-  };
-
-  const queryObjTwo = {
-    text: "INSERT INTO Users (role_id, email, password, first_name, last_name, state) VALUES($1, $2, $3, $4, $5, $6) RETURNING *",
-    values: [role_id, email, hashedPassword, first_name, last_name, state],
   };
 
   pool.query(queryObj, (err, results) => {
@@ -81,8 +58,44 @@ router.post("/signup", async (req, res) => {
       res.status(401).json({
         message: "Email already exists",
       });
-    } else if (results.rowCount == 0) {
-      pool.query(queryObjTwo, (err, response) => {
+    }
+  });
+
+  const roleQueryObj = {
+    text: "SELECT * FROM Roles WHERE name = $1",
+    values: [role_name],
+  };
+
+  // check for role
+  pool.query(roleQueryObj, (err, results) => {
+    if (err) {
+      throw err;
+    }
+
+    if (role_id == 1 && role_name == "superadmin") {
+      console.log('true')
+      res.json({
+        message: "The superadmin only has the abilty to create admins"
+      })
+    } else if (role_id == 2 && role_name == "superadmin") {
+      const queryObjTwo = {
+        text: "INSERT INTO Users (role_id, email, password, first_name, last_name, state) VALUES($1, $2, $3, $4, $5, $6) RETURNING *",
+        values: [role_id, email, hashedPassword, first_name, last_name, state],
+      };
+      pool.query(queryObjTwo, (err, results) => {
+        if (err) {
+          throw err
+        }
+        res.json({
+          message: "User created successfully",
+        });
+      });
+    } else if (role_id == 1) {
+      const queryObjTwo = {
+        text: "INSERT INTO Users (role_id, email, password, first_name, last_name, state) VALUES($1, $2, $3, $4, $5, $6) RETURNING *",
+        values: [role_id, email, hashedPassword, first_name, last_name, state],
+      };
+      pool.query(queryObjTwo, (err, results) => {
         if (err) {
           res.json({
             message: err,
@@ -91,16 +104,14 @@ router.post("/signup", async (req, res) => {
         res.json({
           message: "User created successfully",
         });
-        console.log(response);
+        console.log(res);
       });
+    } else if (role_id == 2) {
+      res.status(400).json({
+        message: "Only the superadmin can create admins"
+      })
     }
   });
-
-  if (errors.length > 0) {
-    res.json({
-      errors,
-    });
-  }
 });
 
 //User login
@@ -137,9 +148,12 @@ router.post("/login", (req, res) => {
                 const token = jwt.sign({
                     _id: user.id,
                   },
-                  "secret"
+                  process.env.TOKEN_SECRET
                 );
-                res.header("auth-token", token).json(token);
+                res.header("auth-token", token).json({
+                  message: "Login successful",
+                  token
+                });
               }
               if (!isMatch) {
                 res.json({

@@ -2,6 +2,11 @@ const express = require("express");
 const morgan = require("morgan");
 const auth = require("./auth/auth");
 const parcel = require("./parcel/parcel");
+const dotenv = require("dotenv")
+
+dotenv.config({
+    path: "./config/config.env"
+})
 
 const app = express();
 

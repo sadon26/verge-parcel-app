@@ -1,4 +1,4 @@
-CREATE DATABASE parceldelivery;
+CREATE DATABASE verge;
 
 CREATE TABLE Users
 (
@@ -45,6 +45,3 @@ CREATE TABLE parcel
     status VARCHAR(255) NOT NULL DEFAULT 'Pending'
 );
 
-ALTER TABLE parcel ALTER COLUMN parcel
-SET
-DEFAULT 'Pending'
